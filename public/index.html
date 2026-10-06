@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TubeGrab - Free YouTube Video & Audio Downloader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="glow-effect"></div>
+
+    <!-- Header / Navbar -->
+    <header>
+        <a href="#" class="logo">
+            <i class="fa-brands fa-youtube"></i>
+            TubeGrab
+        </a>
+        <nav>
+            <a href="#downloader">Downloader</a>
+            <a href="#features">Features</a>
+            <a href="#how-to-use">How to Use</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="downloader">
+        <h1>Fast & Free <span>YouTube Downloader</span></h1>
+        <p>Choose an available video quality or audio format and download it directly to your device.</p>
+
+        <!-- Downloader Box -->
+        <div class="downloader-box">
+            <div class="input-wrapper">
+                <input type="text" id="video-url" placeholder="Paste YouTube video or Shorts link here..." autocomplete="off">
+                <button class="paste-btn" onclick="pasteFromClipboard()">
+                    <i class="fa-regular fa-clipboard"></i> Paste
+                </button>
+                <button class="fetch-btn" id="fetch-btn" onclick="processVideo()">
+                    <i class="fa-solid fa-bolt"></i> Start
+                </button>
+            </div>
+
+            <div id="error-msg" class="error-msg"></div>
+            <div id="download-progress" class="download-progress" role="status" aria-live="polite" hidden>
+                <p id="download-progress-message">Starting download...</p>
+                <progress id="download-progress-bar" max="100" value="0"></progress>
+                <p id="download-progress-details" class="progress-details"></p>
+            </div>
+            <iframe name="download-frame" title="Download response" hidden></iframe>
+
+            <!-- Video Preview & Results -->
+            <div id="result-container">
+                <div class="video-card">
+                    <div class="video-thumb-wrapper">
+                        <img id="video-thumb" class="video-thumb" src="" alt="Thumbnail">
+                    </div>
+                    <div class="video-info">
+                        <h3 id="video-title">Loading title...</h3>
+                        <p id="video-author"><i class="fa-solid fa-user-check"></i> Channel</p>
+
+                        <div style="font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px;">
+                            Select Format to Download:
+                        </div>
+                        <div class="format-list" id="format-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-title">
+            <h2>Why Choose TubeGrab?</h2>
+            <p>The simplest tool to save your favorite YouTube videos and music.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                <h4>High-Speed Downloads</h4>
+                <p>Instant file preparation with quick server routing for fast download speeds.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
+                <h4>Multiple Formats</h4>
+                <p>Choose from the video qualities and audio formats available for each video.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <h4>Safe & Registration Free</h4>
+                <p>No registration, no accounts, and no downloads of questionable software needed.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+                <h4>All Devices Supported</h4>
+                <p>Fully responsive and compatible with Windows, macOS, Android, and iOS.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="steps" id="how-to-use">
+        <div class="section-title">
+            <h2>How to Download Videos</h2>
+            <p>Get your video downloaded in 3 simple steps</p>
+        </div>
+
+        <div class="step-row">
+            <div class="step-number">1</div>
+            <div>
+                <h4>Copy the URL</h4>
+                <p style="color: var(--text-muted); font-size: 14px;">Open YouTube and copy the video URL from the browser address bar or share button.</p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <div class="step-number">2</div>
+            <div>
+                <h4>Paste & Click Start</h4>
+                <p style="color: var(--text-muted); font-size: 14px;">Paste the link into the search box above and press the Start button.</p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <div class="step-number">3</div>
+            <div>
+                <h4>Choose Format & Save</h4>
+                <p style="color: var(--text-muted); font-size: 14px;">Select a listed video quality or audio format and watch its download progress.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 TubeGrab. Designed for personal and educational use.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script src="script.js"></script>
+</body>
+</html>

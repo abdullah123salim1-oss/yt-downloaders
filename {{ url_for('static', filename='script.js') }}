@@ -1,0 +1,79 @@
+let hls;
+
+function playStream() {
+    let input = document.getElementById("streamUrl").value.trim();
+    let iframe = document.getElementById("iframePlayer");
+    let video = document.getElementById("videoPlayer");
+
+    if (!input) {
+        alert("Barah-e-karam koi link ya embed code paste karein!");
+        return;
+    }
+
+    // 1. Agar user ne pura <iframe> code paste kar diya hai
+    if (input.startsWith("<iframe") && input.includes("src=")) {
+        let srcMatch = input.match(/src=["'](.*?)["']/);
+        if (srcMatch && srcMatch[1]) {
+            input = srcMatch[1];
+        }
+    }
+
+    // 2. Agar Direct Live Stream hai (.m3u8 ya .mp4)
+    if (input.includes(".m3u8") || input.endsWith(".mp4")) {
+        iframe.style.display = "none";
+        iframe.src = ""; // Stop iframe
+        video.style.display = "block";
+
+        if (input.includes(".m3u8")) {
+            if (Hls.isSupported()) {
+                if (hls) {
+                    hls.destroy(); // Purani stream destroy karein
+                }
+                hls = new Hls();
+                hls.loadSource(input);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari browser ke liye
+                video.src = input;
+                video.play();
+            }
+        } else {
+            // Direct MP4 link
+            video.src = input;
+            video.play();
+        }
+        return;
+    }
+
+    // 3. Agar YouTube ka link ho
+    let embedUrl = "";
+    if (input.includes("youtube.com/watch?v=")) {
+        let videoId = input.split("v=")[1].split("&")[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    } else if (input.includes("youtu.be/")) {
+        let videoId = input.split("youtu.be/")[1].split("?")[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    } 
+    // 4. Agar Twitch Stream ho
+    else if (input.includes("twitch.tv/")) {
+        let channel = input.split("twitch.tv/")[1].split("/")[0].replace("/", "");
+        embedUrl = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true`;
+    } 
+    // 5. Kisi bhi aur website ka direct URL/Embed link ho
+    else {
+        embedUrl = input;
+    }
+
+    // Iframe ko show karein aur Video player ko hide
+    if (hls) {
+        hls.destroy();
+    }
+    video.pause();
+    video.style.display = "none";
+
+    iframe.style.display = "block";
+    iframe.src = embedUrl;
+}

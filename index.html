@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TubeGrab - Free YouTube Video & Audio Downloader</title>
+    <meta name="description" content="Find available formats for YouTube videos you own or are authorized to download.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles.css">
 
     <style>
         :root {
@@ -282,11 +284,6 @@
             border-color: var(--primary);
         }
 
-        .dl-option[aria-disabled="true"] {
-            opacity: 0.55;
-            pointer-events: none;
-        }
-
         .dl-option span {
             color: var(--text-muted);
             font-size: 11px;
@@ -465,31 +462,36 @@
             <i class="fa-brands fa-youtube"></i>
             TubeGrab
         </a>
-        <nav>
+        <nav id="site-navigation">
             <a href="#downloader">Downloader</a>
             <a href="#features">Features</a>
             <a href="#how-to-use">How to Use</a>
+            <a href="#faq">FAQ</a>
         </nav>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-navigation">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
     </header>
 
     <!-- Hero Section -->
     <section class="hero" id="downloader">
-        <h1>Fast & Free <span>YouTube Downloader</span></h1>
-        <p>Choose an available video quality or audio format and download it directly to your device.</p>
+        <h1>Save videos you have permission to <span>download</span></h1>
+        <p>Choose an available quality or audio format for content you own or are authorized to save.</p>
 
         <!-- Downloader Box -->
-        <div class="downloader-box">
+        <form class="downloader-box" id="video-form">
             <div class="input-wrapper">
-                <input type="text" id="video-url" placeholder="Paste YouTube video or Shorts link here..." autocomplete="off">
-                <button class="paste-btn" onclick="pasteFromClipboard()">
+                <input type="url" id="video-url" placeholder="Paste a YouTube video or Shorts link..." autocomplete="url" aria-label="YouTube video URL" aria-describedby="url-help" required>
+                <button class="paste-btn" id="paste-btn" type="button">
                     <i class="fa-regular fa-clipboard"></i> Paste
                 </button>
-                <button class="fetch-btn" id="fetch-btn" onclick="processVideo()">
+                <button class="fetch-btn" id="fetch-btn" type="submit">
                     <i class="fa-solid fa-bolt"></i> Start
                 </button>
             </div>
+            <p id="url-help" class="input-help">Only videos you own or have permission to download. YouTube may temporarily limit requests.</p>
 
-            <div id="error-msg" class="error-msg"></div>
+            <div id="error-msg" class="error-msg" role="alert" aria-live="assertive"></div>
             <div id="download-progress" class="download-progress" role="status" aria-live="polite" hidden>
                 <p id="download-progress-message">Starting download...</p>
                 <progress id="download-progress-bar" max="100" value="0"></progress>
@@ -513,7 +515,7 @@
                         <div class="format-list" id="format-list"></div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
     </section>
 
@@ -521,14 +523,14 @@
     <section class="features" id="features">
         <div class="section-title">
             <h2>Why Choose TubeGrab?</h2>
-            <p>The simplest tool to save your favorite YouTube videos and music.</p>
+            <p>A straightforward way to find available formats for content you are authorized to save.</p>
         </div>
 
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon"><i class="fa-solid fa-gauge-high"></i></div>
                 <h4>High-Speed Downloads</h4>
-                <p>Instant file preparation with quick server routing for fast download speeds.</p>
+                <p>Downloads are prepared on demand. Speed depends on your connection and the selected video.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
@@ -537,13 +539,13 @@
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                <h4>Safe & Registration Free</h4>
-                <p>No registration, no accounts, and no downloads of questionable software needed.</p>
+                <h4>No TubeGrab Account Needed</h4>
+                <p>No TubeGrab account is required. Your use remains subject to platform rules and permissions.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fa-solid fa-mobile-screen"></i></div>
                 <h4>All Devices Supported</h4>
-                <p>Fully responsive and compatible with Windows, macOS, Android, and iOS.</p>
+                <p>Responsive layouts work across modern desktop and mobile browsers.</p>
             </div>
         </div>
     </section>
@@ -580,173 +582,32 @@
         </div>
     </section>
 
+    <section class="faq" id="faq">
+        <div class="section-title">
+            <h2>Frequently asked questions</h2>
+            <p>Helpful notes about supported links and temporary service limits.</p>
+        </div>
+        <div class="faq-list">
+            <details>
+                <summary>Why might a video not load?</summary>
+                <p>Some videos are private, age-restricted, unavailable in your region, or temporarily limited by YouTube. Wait before trying again and use YouTube's own options where available. This tool does not bypass those restrictions.</p>
+            </details>
+            <details>
+                <summary>What can I download?</summary>
+                <p>Only download videos you own or have permission to save, and follow YouTube's Terms of Service and applicable copyright laws.</p>
+            </details>
+            <details>
+                <summary>Why are some quality or audio options missing?</summary>
+                <p>The options shown depend on the formats YouTube makes available for that video at the time of the request.</p>
+            </details>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
-        <p>&copy; 2026 TubeGrab. Designed for personal and educational use.</p>
+        <p>&copy; 2026 TubeGrab. Use only with content you own or are authorized to download.</p>
     </footer>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // Paste URL from Clipboard
-        async function pasteFromClipboard() {
-            try {
-                const text = await navigator.clipboard.readText();
-                if (text) {
-                    document.getElementById('video-url').value = text;
-                    processVideo();
-                }
-            } catch (err) {
-                showError("Clipboard permission denied. Please paste manually.");
-            }
-        }
-
-        function showError(msg) {
-            const errDiv = document.getElementById('error-msg');
-            errDiv.innerText = msg;
-            errDiv.style.display = 'block';
-        }
-
-        function clearError() {
-            const errDiv = document.getElementById('error-msg');
-            errDiv.innerText = '';
-            errDiv.style.display = 'none';
-        }
-
-        // Fetch real video info & show thumbnail
-        async function processVideo() {
-            clearError();
-            const urlInput = document.getElementById('video-url').value.trim();
-            const resultBox = document.getElementById('result-container');
-            const startBtn = document.getElementById('fetch-btn');
-            resultBox.style.display = 'none';
-            document.getElementById('format-list').replaceChildren();
-
-            if (!urlInput) {
-                showError('Please paste a valid YouTube video link first.');
-                return;
-            }
-
-            startBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
-            startBtn.disabled = true;
-
-            try {
-                const response = await fetch(`/api/video-info?url=${encodeURIComponent(urlInput)}`);
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error([data.error, data.details].filter(Boolean).join(' ') || 'Unable to fetch video details.');
-                }
-
-                document.getElementById('video-thumb').src = data.thumbnail || '';
-                document.getElementById('video-title').innerText = data.title;
-                document.getElementById('video-author').innerHTML =
-                    `<i class="fa-solid fa-circle-check" style="color:var(--primary);"></i> ${data.duration ? `Duration: ${formatDuration(data.duration)}` : 'Video ready'}`;
-
-                const formatList = document.getElementById('format-list');
-                formatList.replaceChildren();
-                for (const format of data.formats || []) {
-                    const link = document.createElement('a');
-                    link.className = 'dl-option';
-                    link.href = `/download?url=${encodeURIComponent(urlInput)}&itag=${encodeURIComponent(format.itag)}`;
-                    link.target = 'download-frame';
-                    link.addEventListener('click', (event) => {
-                        event.preventDefault();
-                        if (activeProgressStream) return;
-                        startDownload(link.href);
-                    });
-                    link.textContent = `${format.type} ${format.quality} (${format.container})`;
-                    formatList.appendChild(link);
-                }
-
-                if (!formatList.childElementCount) {
-                    throw new Error('No downloadable formats were found for this video.');
-                }
-
-                resultBox.style.display = 'block';
-                resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-            } catch (err) {
-                showError(err.message || 'Error communicating with YouTube services.');
-            } finally {
-                startBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Start`;
-                startBtn.disabled = false;
-            }
-        }
-
-        function formatDuration(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
-        }
-
-        let activeProgressStream = null;
-
-        function createDownloadId() {
-            if (crypto.randomUUID) return crypto.randomUUID();
-            return Array.from(crypto.getRandomValues(new Uint8Array(16)))
-                .map((value) => value.toString(16).padStart(2, '0'))
-                .join('');
-        }
-
-        function startDownload(downloadUrl) {
-            const progressBox = document.getElementById('download-progress');
-            const progressMessage = document.getElementById('download-progress-message');
-            const progressDetails = document.getElementById('download-progress-details');
-            const progressBar = document.getElementById('download-progress-bar');
-            const formatLinks = document.querySelectorAll('.dl-option');
-
-            activeProgressStream?.close();
-            const downloadId = createDownloadId();
-            const url = new URL(downloadUrl, window.location.href);
-            url.searchParams.set('progressId', downloadId);
-
-            progressBox.hidden = false;
-            progressMessage.textContent = 'Starting download...';
-            progressDetails.textContent = '';
-            progressBar.value = 0;
-            formatLinks.forEach((link) => { link.setAttribute('aria-disabled', 'true'); });
-
-            const progressStream = new EventSource(`/api/download-progress/${downloadId}`);
-            activeProgressStream = progressStream;
-            progressStream.onmessage = (event) => {
-                const progress = JSON.parse(event.data);
-                progressMessage.textContent = progress.message;
-                progressBar.value = progress.percent || 0;
-                progressDetails.textContent = progress.details || [
-                    progress.speed && `Speed: ${progress.speed}`,
-                    progress.eta && `Time left: ${progress.eta}`,
-                ].filter(Boolean).join(' · ');
-
-                if (progress.status === 'complete' || progress.status === 'error') {
-                    progressStream.close();
-                    activeProgressStream = null;
-                    formatLinks.forEach((link) => { link.removeAttribute('aria-disabled'); });
-                }
-            };
-            progressStream.onerror = () => {
-                if (progressStream.readyState === EventSource.CLOSED) {
-                    progressStream.close();
-                    if (activeProgressStream === progressStream) activeProgressStream = null;
-                    progressMessage.textContent = 'Progress connection lost. Check whether the download completed.';
-                    formatLinks.forEach((link) => { link.removeAttribute('aria-disabled'); });
-                }
-            };
-
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url.toString();
-            downloadLink.target = 'download-frame';
-            downloadLink.hidden = true;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            downloadLink.remove();
-        }
-
-        // Allow pressing Enter key in the search input
-        document.getElementById('video-url').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                processVideo();
-            }
-        });
-    </script>
+    <script src="/app.js" defer></script>
 </body>
 </html>

@@ -19,21 +19,37 @@ const supportedYoutubeHosts = new Set([
   'www.youtu.be',
 ]);
 const downloadProgress = new Map();
+const videoInfoCache = new Map();
+const videoInfoRequests = new Map();
 const minimumDownloadSpace = 100 * 1024 * 1024;
+const videoInfoCacheTtl = 2 * 60 * 1000;
+const maximumCachedVideos = 100;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-function isYoutubeUrl(value) {
-  if (typeof value !== 'string') return false;
+function getYoutubeVideoId(value) {
+  if (typeof value !== 'string') return null;
 
   try {
     const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol) && supportedYoutubeHosts.has(url.hostname);
+    if (!['http:', 'https:'].includes(url.protocol) || !supportedYoutubeHosts.has(url.hostname)) {
+      return null;
+    }
+
+    const pathMatch = url.pathname.match(/^\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{11})(?:\/|$)/);
+    const videoId = url.hostname.endsWith('youtu.be')
+      ? url.pathname.split('/').filter(Boolean)[0]
+      : url.searchParams.get('v') || pathMatch?.[1];
+    return videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId) ? videoId : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function isYoutubeUrl(value) {
+  return getYoutubeVideoId(value) !== null;
 }
 
 function getDownloadableFormats(info) {
@@ -98,6 +114,62 @@ async function getVideoInfo(videoUrl) {
   }
 }
 
+async function getCachedVideoInfo(videoUrl) {
+  const videoId = getYoutubeVideoId(videoUrl);
+  const cached = videoInfoCache.get(videoId);
+  if (cached && cached.expiresAt > Date.now()) {
+    videoInfoCache.delete(videoId);
+    videoInfoCache.set(videoId, cached);
+    return cached;
+  }
+  if (cached) videoInfoCache.delete(videoId);
+
+  let request = videoInfoRequests.get(videoId);
+  if (!request) {
+    request = getVideoInfo(videoUrl);
+    videoInfoRequests.set(videoId, request);
+  }
+
+  try {
+    const extractedInfo = await request;
+    const info = {
+      title: extractedInfo.title,
+      thumbnail: extractedInfo.thumbnail || '',
+      duration: extractedInfo.duration,
+      formats: (extractedInfo.formats || []).map((format) => ({
+        format_id: format.format_id,
+        format_note: format.format_note,
+        height: format.height,
+        ext: format.ext,
+        protocol: format.protocol,
+        vcodec: format.vcodec,
+        acodec: format.acodec,
+        filesize: format.filesize,
+        filesize_approx: format.filesize_approx,
+      })),
+    };
+    const entry = {
+      info,
+      data: {
+        title: info.title,
+        thumbnail: info.thumbnail,
+        duration: info.duration,
+        formats: getDownloadableFormats(info),
+      },
+      expiresAt: Date.now() + videoInfoCacheTtl,
+    };
+    videoInfoCache.set(videoId, entry);
+    while (videoInfoCache.size > maximumCachedVideos) {
+      videoInfoCache.delete(videoInfoCache.keys().next().value);
+    }
+    return entry;
+  } finally {
+    if (videoInfoRequests.get(videoId) === request) {
+      videoInfoRequests.delete(videoId);
+    }
+  }
+}
+
 function getErrorDetails(error) {
   const details = error.stderr || error.message || 'Unknown extractor error';
   return details
@@ -107,6 +179,28 @@ function getErrorDetails(error) {
     .slice(-2)
     .join(' ')
     .slice(0, 400);
+}
+
+function getExtractorError(error) {
+  const details = getErrorDetails(error);
+  if (/sign in to confirm|not a bot|http(?: error)? 429|too many requests|rate.?limit/i.test(details)) {
+    return {
+      code: 'YOUTUBE_RATE_LIMITED',
+      message: 'YouTube is temporarily limiting requests from this network. Wait before retrying; this app does not bypass the limit with a proxy.',
+    };
+  }
+
+  if (/private video|video unavailable|members.only|not available in your country|age.restricted/i.test(details)) {
+    return {
+      code: 'VIDEO_UNAVAILABLE',
+      message: 'This video is unavailable to the downloader. Check its visibility and availability, or use YouTube’s own options.',
+    };
+  }
+
+  return {
+    code: 'EXTRACTION_FAILED',
+    message: 'Could not retrieve this video right now. Check that the video is available and try again later.',
+  };
 }
 
 function getDownloadProgress(id) {
@@ -189,21 +283,15 @@ app.get('/api/video-info', async (req, res) => {
   }
 
   try {
-    const info = await getVideoInfo(videoUrl);
-    const formats = getDownloadableFormats(info);
-
-    res.json({
-      title: info.title,
-      thumbnail: info.thumbnail || '',
-      duration: info.duration,
-      formats,
-    });
+    const { data } = await getCachedVideoInfo(videoUrl);
+    res.json(data);
   } catch (error) {
     const details = getErrorDetails(error);
     console.error('Failed to fetch YouTube video details:', details);
+    const publicError = getExtractorError(error);
     res.status(502).json({
-      error: 'Could not fetch video details. The video may be unavailable or YouTube may be temporarily blocking requests.',
-      details,
+      code: publicError.code,
+      error: publicError.message,
     });
   }
 });
@@ -256,7 +344,7 @@ app.get('/download', async (req, res) => {
 
   let tempDir;
   try {
-    const info = await getVideoInfo(videoUrl);
+    const { info } = await getCachedVideoInfo(videoUrl);
     const selectedFormat = (info.formats || []).find((format) => format.format_id === itag);
 
     if (!selectedFormat) {
@@ -367,11 +455,17 @@ app.get('/download', async (req, res) => {
     if (!res.headersSent) {
       const insufficientStorage = error.code === 'INSUFFICIENT_STORAGE' ||
         /errno 28|no space left on device|not enough space on the disk/i.test(details);
-      const message = insufficientStorage
-        ? 'There is not enough free disk space to prepare this download. Free up storage or connect another drive and try again.'
-        : 'Could not download this format. Please try a different quality or try again later.';
-      updateDownloadProgress(downloadId, { status: 'error', message, percent: 0, details });
-      res.status(insufficientStorage ? 507 : 502).json({ error: message, details });
+      const publicError = insufficientStorage
+        ? {
+          code: 'INSUFFICIENT_STORAGE',
+          message: 'There is not enough free disk space to prepare this download. Free up storage or connect another drive and try again.',
+        }
+        : getExtractorError(error);
+      updateDownloadProgress(downloadId, { status: 'error', message: publicError.message, percent: 0, details });
+      res.status(insufficientStorage ? 507 : 502).json({
+        code: publicError.code,
+        error: publicError.message,
+      });
     } else if (!res.destroyed) {
       updateDownloadProgress(downloadId, {
         status: 'error',
